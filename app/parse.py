@@ -1,10 +1,11 @@
 from dataclasses import dataclass
+from lib2to3.pgen2 import driver
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-import time
-from selenium.common.exceptions import NoSuchElementException
+import csv
+from typing import List
 
 
 BASE_URL = "https://webscraper.io/"
@@ -56,6 +57,15 @@ def parse_products(driver):
     return products
 
 
+def save_to_csv(products: List[Product], filename: str) -> None:
+    with open(filename, mode="w", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
+        # Write header
+        writer.writerow(["Title", "Description", "Price", "Rating", "Number of Reviews"])
+        # Write product data
+        for product in products:
+            writer.writerow([product.title, product.description, product.price, product.rating, product.num_of_reviews])
+
 def get_all_products() -> None:
     driver = initialize_driver()
 
@@ -64,9 +74,13 @@ def get_all_products() -> None:
         products = parse_products(driver)
         print(f"Scraped {len(products)} products from {page_name} page")
 
+        filename = f"{page_name}.csv"
+        save_to_csv(products, filename)
+        print(f"Saved {len(products)} products to {filename}")
+
     driver.quit()
-
-
 
 if __name__ == "__main__":
     get_all_products()
+
+
